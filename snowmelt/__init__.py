@@ -596,11 +596,21 @@ def WriteToDSS(inasc, outdss, dtype, path, dunits='MM'):
     bname = os.path.basename(inasc)
     os.chdir(pname)
     
-    asc2dsscmd = os.path.join(config.TOP_DIR, 'Asc2DssGridUtility', 
-                              'asc2dssGriddash')
+    # Old subroutine
+    # asc2dsscmd = os.path.join(config.TOP_DIR, 'Asc2DssGridUtility', 
+    #                           'asc2dssGriddash')
+    # cmdlist = [
+    #     'python', asc2dsscmd, 'gridtype=SHG', 'dunits=' + dunits,
+    #     'dtype=' + dtype, 'in=' + bname, 'dss=' + outdss, 'path=' + path
+    # ]
+    asc2dsscmd = os.path.join(
+        config.TOP_DIR, 'Asc2DssGridUtility', 'asc2dssBash'
+    )
+    quote_str = '"{0}"'
     cmdlist = [
-        'python', asc2dsscmd, 'gridtype=SHG', 'dunits=' + dunits,
-        'dtype=' + dtype, 'in=' + bname, 'dss=' + outdss, 'path=' + path
+        asc2dsscmd, 'gridtype=SHG', 'dunits=' + quote_str.format(dunits),
+        'dtype=' + quote_str.format(dtype), 'in=' + quote_str.format(bname), 
+        'dss=' + quote_str.format(outdss), 'path=' + quote_str.format(path)
     ]
     if not config.SUBPROCESS_QUIET:
         print pname
