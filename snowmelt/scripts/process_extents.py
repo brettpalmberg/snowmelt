@@ -28,13 +28,7 @@ def main():
         # a few different places on rsgis-base.
         if options.src_dir:
             return options.src_dir
-        elif process_date.year > 2012:
-            return config.SRC_DIR
-        elif process_date.year == 2012:
-            return config.ARCHIVE_DIR_2012
-        else:
-            month_path = process_date.strftime('%Y/%B')
-            return os.path.join(config.ARCHIVE_DIR, month_path)
+        return snowmelt.get_src_dir_by_date(proc_date)
 
     def verbose_print(to_print):
         if options.verbose or options.dry_run:

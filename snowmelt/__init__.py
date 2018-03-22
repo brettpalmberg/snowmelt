@@ -30,6 +30,18 @@ def print_dashes(length=64):
     print '-' * length
 
 
+def get_src_dir_by_date(proc_date):
+    # Helper function to find the source data, which is stored in
+    # a few different places on rsgis-base.
+    if process_date.year > 2012:
+        return config.SRC_DIR
+    elif process_date.year == 2012:
+        return config.ARCHIVE_DIR_2012
+    else:
+        month_path = process_date.strftime('%Y/%B')
+        return os.path.join(config.ARCHIVE_DIR, month_path)
+
+
 def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
     ''' Builds an unzip directory and extracts data from source files
     for a given day. 

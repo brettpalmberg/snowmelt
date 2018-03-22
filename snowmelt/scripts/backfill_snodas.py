@@ -60,13 +60,20 @@ def main():
     for process_date in process_dates:
         process_date_ymd = process_date.strftime('%Y%m%d')
 
+        archive_target = snowmelt.get_src_dir_by_date(process_date)
+        # Use 'us' prefix for dates before January 24, 2011.
+        ds_type = 'zz'
+        if process_date < datetime.datetime(2011, 1, 24, 0, 0):
+            ds_type = 'us'
+
         # Check for missing source files.
         snodas_src_files = [
-            f.format(ds='zz', ymd=process_date_ymd) for f in snowmelt.SNODAS_FILENAME_LIST
+            f.format(ds=ds_type, ymd=process_date_ymd) for f in snowmelt.SNODAS_FILENAME_LIST
         ]
+
         missing_data = False
         for filename in snodas_src_files:
-            if not os.path.isfile(os.path.join(config.SRC_DIR, filename + '.grz')):
+            if not os.path.isfile(os.path.join(archive_target, filename + '.grz')):
                 print 'Missing source data file: {0}'.format(filename)
                 missing_data = True
                 break
@@ -77,17 +84,23 @@ def main():
             continue
 
         # Build up our command line bash call for this date.
-        date_args = {
+        path_args = {
             'year': process_date.year,
             'month_num': process_date.strftime('%m'),
             'month_name': process_date.strftime('%b'),
-            'day': process_date.strftime('%d')
+            'day': process_date.strftime('%d'),
+            'masked': 'unmasked'
         }
-        wget_target = WGET_BASE + WGET_PATH.format(**date_args)
+        if process_date < datetime.datetime(2011, 1, 24, 0, 0):
+            path_args['masked'] = 'masked'
+        wget_target = WGET_BASE + WGET_PATH.format(**path_args)
     
         print 'Fetching data from:', wget_target
+        print 'Source data will be stored here:', archive_target
         # Run the bash call to handle the wget and untar/tar-ing.
-        command = 'bash {0} {1} {2}'.format(BACKFILL_CMD, process_date_ymd, wget_target)
+        command = 'bash {0} {1} {2} {3} {4}'.format(
+            BACKFILL_CMD, process_date_ymd, wget_target, archive_target, ds_type
+        )
         print command
         proc = subprocess.Popen(
             command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
