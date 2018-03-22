@@ -19,14 +19,17 @@ snowmelt2=zz_ssmv11044bS__T0024TTNATS
 dth=$1
 target=$2
 
+# Move to our intermediate directory and clear it out.
 cd /fire/study/snow/nohrsc_gdal/backfill_snodas
-# grab the file
+rm *.tar *.gz
+
+# Grab the file.
 /usr/bin/wget -N $target
 
-# untar it
+# Untar it.
 tar -xvf SNODAS_unmasked_"$dth".tar
 
-# need to tar each hdr and dat file together
+# Package up the 4 parts we care about.
 tar -cvzf data_prep/"$swe2""$dth"05HP001.grz "$swe2""$dth"05HP001*.gz 
 tar -cvzf data_prep/"$snowdepth2""$dth"05HP001.grz "$snowdepth2""$dth"05HP001*.gz 
 tar -cvzf data_prep/"$snowavgtemp2""$dth"05DP001.grz "$snowavgtemp2""$dth"05DP001*.gz 
