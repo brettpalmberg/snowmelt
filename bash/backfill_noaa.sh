@@ -12,8 +12,9 @@
 # Command line args
 dth=$1
 target=$2
-archive=$3
-datatype=$4
+wgetfile=$3
+archive=$4
+datatype=$5
 
 # Variables for zz data stream
 swe2="$datatype"_ssmv11034tS__T0001TTNATS
@@ -29,7 +30,7 @@ rm *.tar *.gz
 /usr/bin/wget -N $target
 
 # Untar it.
-tar -xvf SNODAS_unmasked_"$dth".tar
+tar -xvf $wgetfile
 
 # Package up the 4 parts we care about.
 tar -cvzf data_prep/"$swe2""$dth"05HP001.grz "$swe2""$dth"05HP001*.gz 
@@ -38,7 +39,7 @@ tar -cvzf data_prep/"$snowavgtemp2""$dth"05DP001.grz "$snowavgtemp2""$dth"05DP00
 tar -cvzf data_prep/"$snowmelt2""$dth"05DP000.grz "$snowmelt2""$dth"05DP000*.gz 
 
 # Move the created grz files to the target raw dir file
-mv data_prep/*.grz $target
+mv data_prep/*.grz $archive
 
 # Clear out the backfill folder of the intermediate data.
 cd /fire/study/snow/nohrsc_gdal/backfill_snodas

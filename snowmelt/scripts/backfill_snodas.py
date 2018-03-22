@@ -18,7 +18,7 @@ from snowmelt import config
 DATE_REGEX = re.compile(r'^(?P<start_date>\d{8})-(?P<end_date>\d{8})$')
 # ftp://sidads.colorado.edu/DATASETS/NOAA/G02158/unmasked/2013/03_Mar/SNODAS_unmasked_20130326.tar
 WGET_BASE = 'ftp://sidads.colorado.edu/DATASETS/NOAA/G02158/{masked}/'
-WGET_PATH = '{year}/{month_num}_{month_name}/SNODAS_{masked}_{year}{month_num}{day}.tar'
+WGET_PATH = '{year}/{month_num}_{month_name}/SNODAS_{infix}{year}{month_num}{day}.tar'
 
 
 def main():
@@ -89,17 +89,20 @@ def main():
             'month_num': process_date.strftime('%m'),
             'month_name': process_date.strftime('%b'),
             'day': process_date.strftime('%d'),
-            'masked': 'unmasked'
+            'masked': 'unmasked',
+            'infix': 'unmasked_'
         }
         if process_date < datetime.datetime(2011, 1, 24, 0, 0):
             path_args['masked'] = 'masked'
+            path_args['infix'] = ''
         wget_target = (WGET_BASE + WGET_PATH).format(**path_args)
-    
+        wget_file = os.path.basename(wget_target)
         print 'Fetching data from:', wget_target
         print 'Source data will be stored here:', archive_target
         # Run the bash call to handle the wget and untar/tar-ing.
         command = 'bash {0} {1} {2} {3} {4}'.format(
-            BACKFILL_CMD, process_date_ymd, wget_target, archive_target, ds_type
+            BACKFILL_CMD, process_date_ymd, wget_target,
+            wget_file, archive_target, ds_type
         )
         print command
         proc = subprocess.Popen(
