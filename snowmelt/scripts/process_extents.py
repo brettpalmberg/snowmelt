@@ -68,6 +68,11 @@ def main():
          help='Parse extents for a given project, defined in PROJECT_EXTENTS. '
               '--scp is currently disabled for this option.')
 
+    parser.add_option('-c', '--conus-tiff-only', dest='conus_tiff_only',
+        action='store_true', default=False,
+        help='Build the CONUS GeoTiff dataset only, '
+             'do not create DSS files. Defaults to False.')
+
     # Debugging options.
     parser.add_option('--dry-run', dest='dry_run', action='store_true',
         default=False, help='Dry run of the script.')
@@ -82,7 +87,7 @@ def main():
 
     # Only one of the following options may be used at a time.
     # The options disable the use of the division and district args.
-    no_arg_opts = ('all', 'project', 'division')
+    no_arg_opts = ('all', 'project', 'division', 'conus_tiff_only')
     no_arg_opt_count = 0
     for opt in no_arg_opts:
         if options.__dict__[opt]:
@@ -174,10 +179,13 @@ def main():
     # manipulation once per date. 
     for process_date in process_dates:
         
-        # Fetch and transform source data.
+        # Fetch and transform source data and then bail if we ran into errors
+        # or if we are only creating CONUS Tiffs.
         unzip_dir = snowmelt.prepare_source_data_for_date(
             process_date, get_src_dir_by_date(process_date)
         )
+        if options.conus_tiff_only:
+            continue
         if unzip_dir is None:
             print 'Skipping date:', process_date.strftime('%Y.%m.%d')
             continue

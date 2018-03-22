@@ -27,7 +27,7 @@ LEGACY_DIRECTORY_STRUCTURE = False
 SCP_TARGET_STR = \
     'cwmsgrids@cpc-cwms2.usace.army.mil:/netapp/cwmsgrids/data/watershed/{0}/{1}/'
 
-KEEP_PROCESSED_SRC_DATA = True
+KEEP_PROCESSED_SRC_DATA = False
 SUBPROCESS_QUIET = True
 
 EXTENTS = {
