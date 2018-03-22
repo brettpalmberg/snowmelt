@@ -33,12 +33,12 @@ def print_dashes(length=64):
 def get_src_dir_by_date(proc_date):
     # Helper function to find the source data, which is stored in
     # a few different places on rsgis-base.
-    if process_date.year > 2012:
+    if proc_date.year > 2012:
         return config.SRC_DIR
-    elif process_date.year == 2012:
+    elif proc_date.year == 2012:
         return config.ARCHIVE_DIR_2012
     else:
-        month_path = process_date.strftime('%Y/%B')
+        month_path = proc_date.strftime('%Y/%B')
         return os.path.join(config.ARCHIVE_DIR, month_path)
 
 

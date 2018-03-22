@@ -17,8 +17,8 @@ from snowmelt import config
 
 DATE_REGEX = re.compile(r'^(?P<start_date>\d{8})-(?P<end_date>\d{8})$')
 # ftp://sidads.colorado.edu/DATASETS/NOAA/G02158/unmasked/2013/03_Mar/SNODAS_unmasked_20130326.tar
-WGET_BASE = 'ftp://sidads.colorado.edu/DATASETS/NOAA/G02158/unmasked/'
-WGET_PATH = '{year}/{month_num}_{month_name}/SNODAS_unmasked_{year}{month_num}{day}.tar'
+WGET_BASE = 'ftp://sidads.colorado.edu/DATASETS/NOAA/G02158/{masked}/'
+WGET_PATH = '{year}/{month_num}_{month_name}/SNODAS_{masked}_{year}{month_num}{day}.tar'
 
 
 def main():
@@ -93,7 +93,7 @@ def main():
         }
         if process_date < datetime.datetime(2011, 1, 24, 0, 0):
             path_args['masked'] = 'masked'
-        wget_target = WGET_BASE + WGET_PATH.format(**path_args)
+        wget_target = (WGET_BASE + WGET_PATH).format(**path_args)
     
         print 'Fetching data from:', wget_target
         print 'Source data will be stored here:', archive_target
