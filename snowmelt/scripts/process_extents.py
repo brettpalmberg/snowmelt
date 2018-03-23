@@ -132,6 +132,9 @@ def main():
             print ('Could not find extents list for '
                    'project "{0}"').format(options.project)
             sys.exit(1)
+    elif options.conus_tiff_only:
+        # In tiff only mode we don't produce DSS files.
+        inputs_list = []
     else:
         division, district = args
         try:
@@ -178,8 +181,6 @@ def main():
         unzip_dir = snowmelt.prepare_source_data_for_date(
             process_date, get_src_dir_by_date(process_date)
         )
-        if options.conus_tiff_only:
-            continue
         if unzip_dir is None:
             print 'Skipping date:', process_date.strftime('%Y.%m.%d')
             continue
