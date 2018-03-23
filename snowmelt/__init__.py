@@ -42,7 +42,7 @@ def get_src_dir_by_date(proc_date):
         return os.path.join(config.ARCHIVE_DIR, month_path)
 
 
-def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
+def prepare_source_data_for_date(process_date, src_dir, conus_tiff_only=True):
     ''' Builds an unzip directory and extracts data from source files
     for a given day. 
     Returns the directory path to the unzipped files,
@@ -78,15 +78,23 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
         print_dashes()
         return None
 
-    if save_tiff:
-        mkdir_p(us_tif_dir)
+    mkdir_p(us_tif_dir)
+    mkdir_p(unzip_dir)
 
     # Loop through our filenames and do the unzipping and other set up.
-    mkdir_p(unzip_dir)
     for filename in snodas_src_files:
+        
+        # Cobble together all the file names.
         src_file = os.path.join(src_dir, filename)
         unzip_file = os.path.join(unzip_dir, filename)
         ready_file = unzip_file + '.bil'
+        shgtif = os.path.join(us_tif_dir, filename + 'alb.tif')
+
+        # Don't bother doing anything if tiff already exists in conus_tiff_only mode.
+        if conus_tiff_only and os.path.isfile(shgtif):
+            print 'CONUS SHG tiff already exists:', shgtif
+            continue
+
         if not os.path.isfile(ready_file):
             print 'Processing source to output file:', ready_file
             UnzipLinux(src_file, unzip_file)
@@ -95,14 +103,12 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
             print 'Using existing source file:', ready_file 
         
         # Save a full version of the day's data set.
-        shgtif = os.path.join(us_tif_dir, filename + 'alb.tif')
-        if save_tiff:
-            if not os.path.isfile(shgtif):
-                print 'Saving CONUS SHG tiff file:', shgtif
-                ReprojUseWarpBil(ready_file, shgtif, nodata=nodata_val,
-                                 tr_x='1000', tr_y='-1000')
-            else:
-                print 'CONUS SHG tiff already exists:', shgtif
+        if not os.path.isfile(shgtif):
+            print 'Saving CONUS SHG tiff file:', shgtif
+            ReprojUseWarpBil(ready_file, shgtif, nodata=nodata_val,
+                             tr_x='1000', tr_y='-1000')
+        else:
+            print 'CONUS SHG tiff already exists:', shgtif
 
     print_dashes()
     return unzip_dir

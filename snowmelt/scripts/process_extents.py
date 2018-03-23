@@ -179,7 +179,7 @@ def main():
         # Fetch and transform source data and then bail if we ran into errors
         # or if we are only creating CONUS Tiffs.
         unzip_dir = snowmelt.prepare_source_data_for_date(
-            process_date, get_src_dir_by_date(process_date)
+            process_date, get_src_dir_by_date(process_date), options.conus_tiff_only
         )
         if unzip_dir is None:
             print 'Skipping date:', process_date.strftime('%Y.%m.%d')
@@ -188,8 +188,7 @@ def main():
         for input_list in inputs_list:
             division, district, extents_list = input_list
             verbose_print('-' * 64)
-            verbose_print('{0} {1} Watersheds:'.format(division.upper(), 
-                                                         district.upper()))
+            verbose_print('{0} {1} Watersheds:'.format(division.upper(), district.upper()))
             for extent in extents_list:
                 verbose_print('{0}: {1}'.format(extent[0], extent[1]))
 
