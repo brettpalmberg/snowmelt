@@ -100,7 +100,7 @@ def main():
         print 'Fetching data from:', wget_target
         print 'Source data will be stored here:', archive_target
         # Run the bash call to handle the wget and untar/tar-ing.
-        command = 'bash {0} {1} {2} {3} {4}'.format(
+        command = 'bash {0} {1} {2} {3} {4} {5}'.format(
             BACKFILL_CMD, process_date_ymd, wget_target,
             wget_file, archive_target, ds_type
         )
