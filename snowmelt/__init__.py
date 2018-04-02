@@ -414,7 +414,7 @@ def min_box_os(ext1, ext2, cellsize):
 
 def RawFileManip(file_noext, masterhdr):
     ''' Replaces header with custom header file and renames .dat to .bil '''
-    if os.isfile(file_noext + ".Hdr"):
+    if os.path.exists(file_noext + ".Hdr"):
         os.remove(file_noext + ".Hdr")
     shutil.copy(masterhdr, file_noext + ".hdr")
     if os.path.exists(file_noext + ".bil"):
