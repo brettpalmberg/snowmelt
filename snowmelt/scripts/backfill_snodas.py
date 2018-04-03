@@ -110,8 +110,8 @@ def main():
         )
         stdout, stderr = proc.communicate()
         exit_code = proc.wait()
+        print stdout
         if exit_code:
-            print stdout
             print stderr
             print 'ERROR - could not backfill for date: {0}'.format(process_date_ymd)
         else:
