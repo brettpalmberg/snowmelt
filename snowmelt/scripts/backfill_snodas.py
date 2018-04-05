@@ -71,6 +71,9 @@ def main():
             f.format(ds=ds_type, ymd=process_date_ymd) for f in snowmelt.SNODAS_FILENAME_LIST
         ]
 
+        # Don't check for temperature, some early datasets are missing it.
+        snodas_src_files.pop(2)
+
         missing_data = False
         for filename in snodas_src_files:
             if not os.path.isfile(os.path.join(archive_target, filename + '.grz')):
