@@ -58,21 +58,20 @@ def main():
 
     for process_date in process_dates:
         dss_file = 'snow.{0}.dss'.format(process_date.strftime('%Y.%m'))
-        for division in config.EXTENTS:
-            for district in config.EXTENTS[division]:
-                src_data = os.path.join(config.TOP_DIR, division, district, 
-                                        'results_sn', 'dss_files', dss_file)
-                target_dir = config.SCP_TARGET_STR.format(division, district)
-                command = 'scp {0} {1}'.format(src_data, target_dir)
-                print command
-                proc = subprocess.Popen(command, shell=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
-                stdout, stderr = proc.communicate()
-                exit_code = proc.wait()
-                print stdout
-                if exit_code:
-                    print 'ERROR - could not transfer: {0}'.format(src_data)
+        for office in config.EXTENTS:
+            src_data = os.path.join(config.TOP_DIR, office, 
+                                    'results_sn', 'dss_files', dss_file)
+            target_dir = config.SCP_TARGET_STR.format(office)
+            command = 'scp {0} {1}'.format(src_data, target_dir)
+            print command
+            proc = subprocess.Popen(command, shell=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            stdout, stderr = proc.communicate()
+            exit_code = proc.wait()
+            print stdout
+            if exit_code:
+                print 'ERROR - could not transfer: {0}'.format(src_data)
 
 
 if __name__ == '__main__':

@@ -25,20 +25,17 @@ ASC_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
 LEGACY_DIRECTORY_STRUCTURE = False
 
 SCP_TARGET_STR = \
-    'cwmsgrids@cpc-cwms2.usace.army.mil:/netapp/cwmsgrids/data/watershed/{0}/{1}/'
+    'cwmsgrids@cpc-cwms2.usace.army.mil:/netapp/cwmsgrids/data/watershed/{0}/'
 
 KEEP_PROCESSED_SRC_DATA = True
 SUBPROCESS_QUIET = True
 
 EXTENTS = {
-    'iwr': {
         'hec': [
             ['Russian River', [-2320000, 2014000, -2258000, 2154000]],
             ['Upper Susquehanna River', [1558000, 2140000, 1740000, 2410000]],
             ['Minnesota River', [-112000, 2244000, 234000, 2602000]],
         ],
-    },
-    'lrd': {
         'lrb': [
             ['Genesee River', [1428000, 2230000, 1508000, 2400000]],
         ],
@@ -76,8 +73,6 @@ EXTENTS = {
             ['Beaver River', [1216000, 1944000, 1356000, 2194000]],
             ['Allegheny River', [1280000, 2002000, 1494000, 2298000]],
         ],
-    },
-    'mvd': {
         'mvp': [
             ['Eau Galla River', [284000, 2404000, 326000, 2460000]],
             ['Minnesota River', [-112000, 2244000, 234000, 2602000]],
@@ -102,8 +97,6 @@ EXTENTS = {
             ['Salt River', [280000, 1780000, 426000, 1944000]],
             ['Kaskaskia River', [498000, 1672000, 670000, 1938000]],
         ],
-    },
-    'nad': {
         'nab': [
             ['Chemung River', [1466000, 2218000, 1598000, 2336000]],
             ['Juniata River', [1438000, 2000000, 1592000, 2136000]],
@@ -121,8 +114,6 @@ EXTENTS = {
             ['Connecticut River', [1820000, 2266000, 1958000, 2734000]],
             ['Merrimack River', [1892000, 2384000, 2030000, 2612000]],
         ],
-    },
-    'nwd': {
         'nwd': [
             ['Above Fort Peck', [-1394000, 2460000, -740000, 2998000]],
             ['Big Horn River', [-1132000, 2226000, -850000, 2634000]],
@@ -166,13 +157,9 @@ EXTENTS = {
             ['Upper Snake River', [-1592000, 2198000, -1098000, 2522000]],
             ['Middle Snake River', [-1802000, 2186000, -1482000, 2656000]],
         ],
-    },
-    'pod': {
         'poa': [
             ['Chena River', [-2830000, 5228000, -2634000, 5324000]],
         ],
-    },
-    'spd': {
         'spa': [
             ['Pecos River', [-916000, 744000, -490000, 1486000]],
             ['Arkansas River', [-912000, 1564000, -516000, 1872000]],
@@ -193,7 +180,6 @@ EXTENTS = {
         'spl': [
             ['Gila River', [-1722000, 973000, -1079000, 1563000]],
         ],
-    },
 }
 
 PROJECT_EXTENTS = {
