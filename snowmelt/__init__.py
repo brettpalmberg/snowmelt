@@ -58,8 +58,9 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
     print 'Processing source data for:', process_date.strftime('%Y.%m.%d')
     msgs = []
     for filename in snodas_src_files:
-        if not os.path.isfile(os.path.join(src_dir, filename + '.grz')):
-            msgs += ['Missing source data file: {0}'.format(filename)]
+        _file = os.path.join(src_dir, filename + '.grz')
+        if not os.path.isfile(_file):
+            msgs += ['Missing source data file: {0}'.format(_file)]
     if msgs:
         for msg in msgs:
             print msg
