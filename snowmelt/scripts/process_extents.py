@@ -47,7 +47,7 @@ def main():
     start = timeit.default_timer()
 
     # Create an OptionParser to handle any command-line arguments and options.
-    usage = ("usage: %prog [options] division district ")
+    usage = ("usage: %prog [options] office")
     parser = OptionParser(usage=usage)
 
     # Command line options added here.
@@ -59,8 +59,8 @@ def main():
              'of dates with YYYYMMDD-YYYYMMDD format.')
     parser.add_option('-a', '--all', dest='all', action='store_true',
         default=False, help='Parse all exents defined in config.py')
-    parser.add_option('--division', dest='division', default=None,
-        help='Parse all exents for a given division.')
+    parser.add_option('--office', dest='office', default=None,
+        help='Parse all basins for a given office.')
     parser.add_option('--scp', dest='run_scp', action='store_true', 
         default=False, help='Copy files to target location specfied in config '
                             'file upon completion of processing.')
@@ -81,8 +81,8 @@ def main():
     options, args = parser.parse_args()
 
     # Only one of the following options may be used at a time.
-    # The options disable the use of the division and district args.
-    no_arg_opts = ('all', 'project', 'division')
+    # The options disable the use of the office argument.
+    no_arg_opts = ('all', 'project', 'office')
     no_arg_opt_count = 0
     for opt in no_arg_opts:
         if options.__dict__[opt]:
@@ -101,29 +101,22 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if no_arg_opt_count == 0 and len(args) != 2:
-        print 'Error: Script requires district and division arguments.\n'
+    if no_arg_opt_count == 0 and len(args) != 1:
+        print 'Error: Script requires one office argument.\n'
         parser.print_help()
         sys.exit(1)
 
-    # Grab parameters based on division and district inputs.
+    # Grab parameters based on office inputs.
     inputs_list = []
     if options.all:
-        for division in config.EXTENTS:
-            for district in config.EXTENTS[division]:
-                inputs_list += [
-                    (division, district, config.EXTENTS[division][district])
-                ]
-    elif options.division:
-        division = options.division
+        for office in config.EXTENTS:
+            inputs_list += [(office, config.EXTENTS[office])]
+    elif options.office:
+        office = options.office
         try:
-            for district in config.EXTENTS[division]:
-                inputs_list += [
-                    (division, district, config.EXTENTS[division][district])
-                ]
+            inputs_list += [(office, config.EXTENTS[office])]
         except KeyError:
-            print ('Could not find extents list for '
-                   'Division "{0}"').format(division)
+            print ('Could not find extents list for office "{0}"').format(office)
             sys.exit(1)
     elif options.project:
         try:
@@ -134,13 +127,12 @@ def main():
                    'project "{0}"').format(options.project)
             sys.exit(1)
     else:
-        division, district = args
+        office = args[0]
         try:
-            extents_list = config.EXTENTS[division][district]
-            inputs_list = [(division, district, extents_list)]
+            extents_list = config.EXTENTS[office]
+            inputs_list = [(office, extents_list)]
         except KeyError:
-            print ('Could not find extents list for '
-                   'Division "{0}", District "{1}"').format(division, district)
+            print ('Could not find extents list for office "{0}"'.format(office))
             sys.exit(1)
 
     # Parse out our processing date(s).
@@ -183,30 +175,27 @@ def main():
             continue
 
         for input_list in inputs_list:
-            division, district, extents_list = input_list
+            office, extents_list = input_list
             verbose_print('-' * 64)
-            verbose_print('{0} {1} Watersheds:'.format(division.upper(), 
-                                                         district.upper()))
+            verbose_print('{0} Watersheds:'.format(office.upper()))
+
             for extent in extents_list:
                 verbose_print('{0}: {1}'.format(extent[0], extent[1]))
 
-            verbose_print(
-                'Processing extents for location {0} - {1}, date {2}'.format(
-                    division, district, process_date
-                )
-            )
+            verbose_print('Processing extents for location {0}, date {1}'.format(office, process_date))
+
             if not options.dry_run:
                 new_data = snowmelt.process_extents(
-                    division, district,
+                    office,
                     process_date + datetime.timedelta(hours=2), # 2am.
                     unzip_dir,
                     extents_list,
                     options,
                 )
                 if new_data is not None:
-                    transfer_list.add((division, district, new_data))
+                    transfer_list.add((office, new_data))
             else:
-                transfer_list.add(division)
+                transfer_list.add(office)
 
         if not config.KEEP_PROCESSED_SRC_DATA and not options.dry_run:
             verbose_print('Removing temp unzipped dir: {0}'.format(unzip_dir))
@@ -226,8 +215,8 @@ def main():
         else:
             print '-' * 64
             print 'Transferring updated files:'
-        for (division, district, new_data) in transfer_list:
-            target_dir = config.SCP_TARGET_STR.format(division, district)
+        for (office, new_data) in transfer_list:
+            target_dir = config.SCP_TARGET_STR.format(office)
             command = 'scp {0} {1}'.format(new_data, target_dir)
             print command
             proc = subprocess.Popen(command, shell=True,

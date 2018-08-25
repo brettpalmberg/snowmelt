@@ -96,11 +96,11 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
     return unzip_dir
 
 
-def process_extents(div_name, dist_name, process_date,
+def process_extents(office_symbol, process_date,
                     src_dir, extents_list, options):
     ''' Main function for processing extents.  Calls lots of helper
     and utility functions. 
-    div_name: string - Name of division, used in output file format.
+    office_symbol: string - unique office symbol, used in output file format.
     process_date: datetime.datetime object - date for which data is desired.
     extents_list: list - list of namedtuples for each watershed.
 
@@ -125,7 +125,7 @@ def process_extents(div_name, dist_name, process_date,
         dataset_type = 'us'
         nodata_val = '55537'
 
-    projdir = os.path.join(config.TOP_DIR, div_name, dist_name)
+    projdir = os.path.join(config.TOP_DIR, office_symbol)
 
     # Use the proper results dir structure based on the config file.
     if config.LEGACY_DIRECTORY_STRUCTURE:
@@ -134,9 +134,9 @@ def process_extents(div_name, dist_name, process_date,
         projdssdir = os.path.join(projresdir, 'dss_files')
         histdir = os.path.join(projresdir, 'history')
     else:
-        projascdir = os.path.join(config.ASC_BASE_DIR, div_name, dist_name)
-        projdssdir = os.path.join(config.DSS_BASE_DIR, div_name, dist_name)
-        histdir = os.path.join(config.HISTORY_BASE_DIR, div_name, dist_name)
+        projascdir = os.path.join(config.ASC_BASE_DIR, office_symbol)
+        projdssdir = os.path.join(config.DSS_BASE_DIR, office_symbol)
+        histdir = os.path.join(config.HISTORY_BASE_DIR, office_symbol)
 
     # Build our results directories if needed.
     mkdir_p(projascdir)
@@ -149,19 +149,19 @@ def process_extents(div_name, dist_name, process_date,
     # Break out if processing for the given date has already happened.
     histfile = os.path.join(histdir, 'proccomplete' + ymdDate + '.txt')
     if os.path.isfile(histfile):
-        print '{0} {1} grids already processed for: {2}'.format(
-            div_name, dist_name, process_date.strftime('%Y.%m.%d')
+        print '{0} grids already processed for: {1}'.format(
+            office_symbol, process_date.strftime('%Y.%m.%d')
         )
         return None
-    print 'Processing {0} {1} grids for: {2}'.format(
-        div_name, dist_name, process_date.strftime('%Y.%m.%d')
+    print 'Processing {0} grids for: {1}'.format(
+        office_symbol, process_date.strftime('%Y.%m.%d')
     )
 
     tmpdir = os.path.join(projascdir, 'tmp' + dstr)
     os.mkdir(tmpdir)
 
     # Set up a dictionary mapping the various properties to their DSS names.
-    PropDict = SetProps(process_date, div_name)
+    PropDict = SetProps(process_date, office_symbol)
     enameDict = {}
     zerolist = ["0001", "0002", "0003"]
     extentGProps = {}
@@ -183,7 +183,7 @@ def process_extents(div_name, dist_name, process_date,
         dtype = varprops[1]
 
         easiername = \
-            div_name + "_" + varprops[0][2].replace(" ", "_").lower() + ymdDate
+            office_symbol + "_" + varprops[0][2].replace(" ", "_").lower() + ymdDate
         enameDict[varcode] = os.path.join(projascdir, easiername + ".asc")
         shgtif = os.path.join(tmpdir, f + "alb.tif")
         shgtifmath = os.path.join(tmpdir, easiername + ".tif")
