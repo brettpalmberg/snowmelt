@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Original imports, will try to cull these a bit.
 import os
 import shutil
@@ -161,11 +162,11 @@ def main():
 
     # Run the actual grid processing for each set of inputs and dates.
     transfer_list = set()
-    
-    # Loop through by date, so we only need to do the source data 
-    # manipulation once per date. 
+
+    # Loop through by date, so we only need to do the source data
+    # manipulation once per date.
     for process_date in process_dates:
-        
+
         # Fetch and transform source data.
         unzip_dir = snowmelt.prepare_source_data_for_date(
             process_date, get_src_dir_by_date(process_date)
