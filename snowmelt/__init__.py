@@ -32,13 +32,13 @@ def print_dashes(length=64):
 
 def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
     ''' Builds an unzip directory and extracts data from source files
-    for a given day. 
+    for a given day.
     Returns the directory path to the unzipped files,
     or None if missing any source data. '''
     ymd_str = process_date.strftime('%Y%m%d')
     unzip_dir = os.path.join(config.PROCESSED_SRC_DIR, 'unzipped_data', ymd_str)
     us_tif_dir = os.path.join(config.PROCESSED_SRC_DIR, 'conus_tiffs')
-    
+
     # Use 'us' prefix and adjust nodata value for dates before January 24, 2011.
     ds_type = 'zz'
     nodata_val = '-9999'
@@ -80,8 +80,8 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
             UnzipLinux(src_file, unzip_file)
             RawFileManip(unzip_file, masterhdr)
         else:
-            print 'Using existing source file:', ready_file 
-        
+            print 'Using existing source file:', ready_file
+
         # Save a full version of the day's data set.
         shgtif = os.path.join(us_tif_dir, filename + 'alb.tif')
         if save_tiff:
@@ -99,12 +99,12 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
 def process_extents(office_symbol, process_date,
                     src_dir, extents_list, options):
     ''' Main function for processing extents.  Calls lots of helper
-    and utility functions. 
-    office_symbol: string - unique office symbol, used in output file format.
+    and utility functions.
+    office_symbol: string - unique office symbol, used in output file format
     process_date: datetime.datetime object - date for which data is desired.
     extents_list: list - list of namedtuples for each watershed.
 
-    Returns the path to the file if new data was written to a DSS file, 
+    Returns the path to the file if new data was written to a DSS file,
     None otherwise.
     '''
 
