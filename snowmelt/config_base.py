@@ -76,10 +76,10 @@ EXTENTS = {
         'mvp': [
             ['Eau Galla River', [284000, 2404000, 326000, 2460000]],
             ['Minnesota River', [-112000, 2244000, 234000, 2602000]],
-            ['Mississippi River Headwaters', [24000, 2526000, 254000, 2760000]],
+            ['Mississippi River Headwaters', [24000, 2402000, 254000, 2760000]],
             ['Mississippi River Navigation', [48000, 2204000, 564000, 2646000]],
             ['Red River North', [-356000, 2494000, 150000, 2950000]],
-            ['Souris River', [-498000, 2748000, -260000, 2910000]],
+            ['Souris River', [-708000, 2736000, -178000, 3100000]],
         ],
         'mvr': [
             ['Mississippi River', [162000, 1810000, 636000, 2338000]],
