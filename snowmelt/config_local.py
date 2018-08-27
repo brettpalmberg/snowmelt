@@ -10,7 +10,7 @@ SRC_DIR = '{}/data/NOHRSC-snodas/data/data_raw'.format(CWMSGRID_HOME)
 ARCHIVE_DIR = SRC_DIR
 ARCHIVE_DIR_2012 = SRC_DIR
 
-PROCESSED_SRC_DIR = 'data/NOHRSC-snodas/data/data_processed'.format(CWMSGRID_HOME)
+PROCESSED_SRC_DIR = '{}/data/NOHRSC-snodas/data/data_processed'.format(CWMSGRID_HOME)
 
 # These three locations are the base directories for our output files.
 DSS_BASE_DIR = '{}/data/NOHRSC-snodas/data/dss'.format(CWMSGRID_HOME)
