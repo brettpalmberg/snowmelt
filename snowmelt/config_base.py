@@ -24,6 +24,11 @@ ASC_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
 # all results will be tossed into TOP_DIR/division/district/results_sn/.../
 LEGACY_DIRECTORY_STRUCTURE = False
 
+# Scratch (Intermediate) File Format Driver
+# (Recommended) flt   : SCRATCH_FILE_DRIVER = 'EHdr'
+#               ascii : SCRATCH_FILE_DRIVER = 'AAIGrid'
+SCRATCH_FILE_DRIVER = 'EHdr'
+
 SCP_TARGET_STR = \
     'cwmsgrids@cpc-cwms2.usace.army.mil:/netapp/cwmsgrids/data/watershed/{0}/'
 

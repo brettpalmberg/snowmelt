@@ -238,9 +238,7 @@ def process_extents(office_symbol, process_date,
                                                   ymdDate
                                                   )
                 
-                # This should go higher up and be configurable...for now:
-                driver_name = 'EHdr'
-                WriteGrid(clipds, file_basename1, tmpdir, driver_name)
+                WriteGrid(clipds, file_basename1, tmpdir, config.SCRATCH_FILE_DRIVER)
                 cliparr = None
                 clipds = None
                 ds = None
@@ -289,7 +287,7 @@ def process_extents(office_symbol, process_date,
                                               ymdDate
                                               )
 
-            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, driver_name)
+            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
 
             # Copy files from tmpdir to projascdir
             for file_ext in ('bil', 'prj'):
