@@ -477,35 +477,6 @@ def ReprojUseWarpBil(infile, outfile, ext=None, nodata='-9999',
     return outfile
 
 
-def RewriteASCII(inasc, outasc):
-    with open(outasc, "w") as fo:
-        with open(inasc, "r") as fi:
-            for line in fi:
-                newline = line.strip()
-                if newline:
-                    fo.write(newline + "\n")
-            fi.close
-        fo.close
-
-
-def RewriteASCII_flt(inasc, outasc):
-    prec = 1
-    with open(outasc, "w") as fo:
-        with open(inasc, "r") as fi:
-            for line in fi:
-                newline = line.strip()
-                if newline:
-                    splitline = newline.split()
-                    if not is_number(splitline[0]):
-                        fo.write(newline + "\n")
-                    else:
-                        y = [float(elem) for elem in splitline]
-                        z = [round(elem, prec) for elem in y]
-                        fo.write(" ".join(map(str, z)) + "\n")
-            fi.close
-        fo.close
-
-
 def RasterMath(shgtif, shgtifmath, varcode, nameDict):
     # VarCode 1038:  Converts snow pack temp to CC.  ** Assumes that
     #   1034 data (swe) listed in nameDict is same size as 1038 data.  This
