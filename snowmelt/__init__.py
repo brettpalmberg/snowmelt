@@ -15,6 +15,10 @@ from osgeo.gdalconst import *
 from snowmelt.utils import mkdir_p
 from snowmelt import config
 
+# TODO refactor structure to avoid these kinds of imports
+sys.path.append('{}/software/grid2dss'.format(os.getenv('CWMSGRID_HOME')))
+from hecgridloaders import flt2dss2 as flt2dss
+
 # Global vars.  TODO Bit ugly, need to rethink how to do these.
 Extent = namedtuple('Extent', 'xmin,ymin,xmax,ymax')  # Convert to a class?
 
@@ -172,6 +176,9 @@ def process_extents(office_symbol, process_date,
         s.format(ds=dataset_type, ymd=ymdDate) for s in SNODAS_FILENAME_LIST
     ]
 
+    # Instantiate new flt2dss.Operation
+    flt2dss_operation = flt2dss.Operation()
+
     # Loop through our source SNODAS files.
     for f in snodaslist:
 
@@ -215,32 +222,36 @@ def process_extents(office_symbol, process_date,
                     int(round(fullof[0])), int(round(fullof[1])),
                     xsize, ysize
                 )
-                outtmpname = os.path.join(tmpdir, extentarr[0] + "tmp.asc")
-                driver = gdal.GetDriverByName("MEM")
 
                 clipgeot = [subext[0], cellsize, 0, subext[3], 0, -cellsize]
-                extentGProps[extentarr[0]] = [
-                    dsProj, clipgeot, xsize, ysize, nodata]
+                extentGProps[extentarr[0]] = [dsProj, clipgeot, xsize, ysize, nodata]
 
+                driver = gdal.GetDriverByName("MEM")
                 clipds = driver.Create("", xsize, ysize, 1, GDT_Float32)
                 clipds.SetGeoTransform(clipgeot)
                 clipds.SetProjection(ds.GetProjection())
                 clipds.GetRasterBand(1).SetNoDataValue(nodata)
                 clipds.GetRasterBand(1).WriteArray(cliparr, 0, 0)
                 clipds.FlushCache()
-                ascbasename = extentarr[0] + "_" + \
-                    varprops[0][2].replace(" ", "_").lower() + ymdDate
-                CreateASCII(clipds, ascbasename, tmpdir)
+                
+                file_basename1 = '{}_{}{}'.format(extentarr[0].replace(" ", "_"),
+                                                  varprops[0][2].replace(" ", "_").lower(),
+                                                  ymdDate
+                                                  )
+                
+                # This should go higher up and be configurable...for now:
+                driver_name = 'EHdr'
+                WriteGrid(clipds, file_basename1, tmpdir, driver_name)
+                cliparr = None
                 clipds = None
                 ds = None
 
-                tmpasc = os.path.join(tmpdir, ascbasename + ".asc")
-                projasc = os.path.join(projascdir, ascbasename + ".asc")
-                shutil.copy(tmpasc, projasc)
-                shutil.copy(
-                    os.path.join(tmpdir, ascbasename + "tmp.prj"),
-                    os.path.join(projascdir, ascbasename + ".prj")
-                )
+                # Copy files from tmpdir to projascdir
+                for file_ext in ('bil', 'prj', 'hdr'):
+                    filename = '{}.{}'.format(file_basename1,file_ext)
+                    shutil.copy(os.path.join(tmpdir, filename),
+                                os.path.join(projascdir, filename)
+                                )
 
                 varprops = PropDict[varcode]
                 p = varprops[0]
@@ -248,9 +259,18 @@ def process_extents(office_symbol, process_date,
 
                 path = "/SHG/" + extentarr[0].upper() + "/" + p[2] + \
                     "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
-                WriteToDSS(projasc, dssfile, dtype, path)
-                outarr = None
-                cliparr = None
+
+                # Create a flt2dss Task
+                flt2dss_task = flt2dss.Task(infile=projgrid,
+                                            dss_file=dssfile,
+                                            data_type=dtype,
+                                            pathname=path,
+                                            grid_type='SHG',
+                                            data_unit='MM'
+                                            )
+
+                # Add flt2dss Task to Operation
+                flt2dss_operation.add_task(flt2dss_task)
 
     if len(extentGProps) == 0:
         print("An error occurred identifying extent properties.")
@@ -264,17 +284,37 @@ def process_extents(office_symbol, process_date,
             dtype = varprops[1]
             path = "/SHG/" + extentarr[0].upper() + "/" + p[2] + \
                 "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
-            ascbasename = extentarr[0] + "_" + \
-                varprops[0][2].replace(" ", "_").lower() + ymdDate
-            tmpasc = os.path.join(tmpdir, ascbasename + ".asc")
-            projasc = os.path.join(projascdir, ascbasename + ".asc")
+            
+            file_basename2 = '{}_{}{}'.format(extentarr[0].replace(" ", "_"),
+                                              varprops[0][2].replace(" ", "_").lower(),
+                                              ymdDate
+                                              )
 
-            WriteZeroDStoAsc(extentGProps[extentarr[0]], ascbasename, tmpdir)
-            shutil.copy(tmpasc, projasc)
-            shutil.copy(os.path.join(tmpdir, ascbasename + "tmp.prj"),
-                        os.path.join(projascdir, ascbasename + ".prj"))
+            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, driver_name)
+
+            # Copy files from tmpdir to projascdir
+            for file_ext in ('bil', 'prj'):
+                filename = '{}.{}'.format(file_basename2,file_ext)
+                shutil.copy(os.path.join(tmpdir, filename),
+                            os.path.join(projascdir, filename)
+                            )
+        
             dssdunits = varprops[3]
-            WriteToDSS(projasc, dssfile, dtype, path, dssdunits)
+
+            # Create a flt2dss Task
+            flt2dss_task = flt2dss.Task(infile=projgrid,
+                                        dss_file=dssfile,
+                                        data_type=dtype,
+                                        pathname=path,
+                                        grid_type='SHG',
+                                        data_unit=dssdunits
+                                        )
+
+            # Add flt2dss Task to Operation
+            flt2dss_operation.add_task(flt2dss_task)
+    
+    # Write grids to DSS
+    flt2dss_operation.execute()
 
     clean_up_tmp_dir(tmpdir)
 
@@ -290,15 +330,19 @@ def process_extents(office_symbol, process_date,
 # Helper functions below.
 ########################################################################
 
+def WriteGrid(inds, gridname, tmpdir, driver_name):
+    if driver_name == 'AAIGrid':
+        fileext = 'asc'
+    elif driver_name == 'EHdr':
+        fileext = 'bil'
+    else:
+        print('dss gridloader unsupported for driver_name: {}'.format(driver_name))
+        sys.exit()
 
-def CreateASCII(inds, ascname, tmpdir):
-    outtmpname = os.path.join(tmpdir, ascname + "tmp.asc")
-    ascdriver = gdal.GetDriverByName("AAIGrid")
-    outds = ascdriver.CreateCopy(outtmpname, inds, 0,
-                                 options=['DECIMAL_PRECISION=4'])
+    outgrid = os.path.join(tmpdir, gridname + '.' + fileext)
+    driver = gdal.GetDriverByName(driver_name)
+    outds = driver.CreateCopy(outgrid, inds, 0, options=[])
     outds = None
-    outasc = os.path.join(tmpdir, ascname + ".asc")
-    RewriteASCII(outtmpname, outasc)
     return
 
 
@@ -615,7 +659,7 @@ def WriteToDSS(inasc, outdss, dtype, path, dunits='MM'):
     return
 
 
-def WriteZeroDStoAsc(gProps, ascname, tmpdir):
+def WriteZeroGrid(gProps, gridname, tmpdir, driver_name):
     xsize = gProps[2]
     ysize = gProps[3]
 
@@ -628,13 +672,7 @@ def WriteZeroDStoAsc(gProps, ascname, tmpdir):
     memds.GetRasterBand(1).WriteArray(ndarr, 0, 0)
     memds.FlushCache()
 
-    outtmpname = os.path.join(tmpdir, ascname + "tmp.asc")
-    ascdriver = gdal.GetDriverByName("AAIGrid")
-    outds = ascdriver.CreateCopy(outtmpname, memds, 0,
-                                 options=['DECIMAL_PRECISION=0'])
-    outds = None
-    outasc = os.path.join(tmpdir, ascname + ".asc")
-    RewriteASCII(outtmpname, outasc)
+    WriteGrid(memds, gridname, tempdir, driver_name)
 
     ndarr = None
     memds = None
