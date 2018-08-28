@@ -252,15 +252,14 @@ def process_extents(office_symbol, process_date,
 
                 varprops = PropDict[varcode]
                 p = varprops[0]
-                dtype = varprops[1]
 
                 path = "/SHG/" + extentarr[0].upper() + "/" + p[2] + \
                     "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
 
                 # Create a flt2dss Task
-                flt2dss_task = flt2dss.Task(infile=projgrid,
+                flt2dss_task = flt2dss.Task(infile=os.path.join(projascdir, '{}.{}'.format(file_basename1, 'bil')),
                                             dss_file=dssfile,
-                                            data_type=dtype,
+                                            data_type=varprops[1],
                                             pathname=path,
                                             grid_type='SHG',
                                             data_unit='MM'
@@ -289,22 +288,19 @@ def process_extents(office_symbol, process_date,
 
             WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
 
-            # Copy files from tmpdir to projascdir
+            # Copy f iles from tmpdir to projascdir
             for file_ext in ('bil', 'prj'):
-                filename = '{}.{}'.format(file_basename2,file_ext)
-                shutil.copy(os.path.join(tmpdir, filename),
-                            os.path.join(projascdir, filename)
+                shutil.copy(os.path.join(tmpdir, '{}.{}'.format(file_basename2, file_ext)),
+                            os.path.join(projascdir, '{}.{}'.format(file_basename2, file_ext))
                             )
-        
-            dssdunits = varprops[3]
 
             # Create a flt2dss Task
-            flt2dss_task = flt2dss.Task(infile=projgrid,
+            flt2dss_task = flt2dss.Task(infile=os.path.join(projascdir, '{}.{}'.format(file_basename2, 'bil')),
                                         dss_file=dssfile,
                                         data_type=dtype,
                                         pathname=path,
                                         grid_type='SHG',
-                                        data_unit=dssdunits
+                                        data_unit=varprops[3]
                                         )
 
             # Add flt2dss Task to Operation
@@ -481,7 +477,7 @@ def RasterMath(shgtif, shgtifmath, varcode, nameDict):
     #   is the case currently because of gdalwarp process.
 
     driver = gdal.GetDriverByName("GTiff")
-    ds = gdal.Open(shgtif, GA_ReadOnly)
+    ds = gdal.Open(shgtif, GA_Rea dOnly)
     if ds is None:
         return False
 
@@ -601,32 +597,6 @@ def UnzipLinux(origfile_noext, file_noext):
             exit_code = proc.wait()
 
 
-def WriteToDSS(inasc, outdss, dtype, path, dunits='MM'):
-    pname = os.path.dirname(inasc)
-    bname = os.path.basename(inasc)
-    os.chdir(pname)
-    
-    asc2dsscmd = os.path.join(config.TOP_DIR, 'Asc2DssGridUtility', 
-                              'asc2dssGriddash')
-    cmdlist = [
-        'python', asc2dsscmd, 'gridtype=SHG', 'dunits=' + dunits,
-        'dtype=' + dtype, 'in=' + bname, 'dss=' + outdss, 'path=' + path
-    ]
-    if not config.SUBPROCESS_QUIET:
-        print(pname)
-        print(' '.join(cmdlist))
-    proc = subprocess.Popen(
-        cmdlist, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
-    exit_code = proc.wait()
-
-    if not config.SUBPROCESS_QUIET:
-        print(stdout)
-    if exit_code:
-        raise RuntimeError(stderr)
-    return
-
-
 def WriteZeroGrid(gProps, gridname, tmpdir, driver_name):
     xsize = gProps[2]
     ysize = gProps[3]
@@ -640,7 +610,7 @@ def WriteZeroGrid(gProps, gridname, tmpdir, driver_name):
     memds.GetRasterBand(1).WriteArray(ndarr, 0, 0)
     memds.FlushCache()
 
-    WriteGrid(memds, gridname, tempdir, driver_name)
+    WriteGrid(memds, gridname, tmpdir, driver_name)
 
     ndarr = None
     memds = None
