@@ -5,4 +5,4 @@ from snowmelt.config_base import *
 try:
     from snowmelt.config_local import *
 except ImportError:
-    print 'Warning: No config_local.py file found, using config_base'
+    print('Warning: No config_local.py file found, using config_base')

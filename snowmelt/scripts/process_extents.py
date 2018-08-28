@@ -39,7 +39,7 @@ def main():
 
     def verbose_print(to_print):
         if options.verbose or options.dry_run:
-            print to_print
+            print(to_print)
 
     def parse_date(date_string):
         return datetime.datetime.strptime(date_string,'%Y%m%d')
@@ -89,21 +89,19 @@ def main():
         if options.__dict__[opt]:
             no_arg_opt_count += 1
             if len(args) != 0:
-                print 'Error: Wrong number of arguments for --{0} option.\n'.format(opt)
+                print('Error: Wrong number of arguments for --{0} option.\n'.format(opt))
                 parser.print_help()
                 sys.exit(1)
     if no_arg_opt_count > 1:
-        print (
-            'Error: Only one of the following options may be '
-            'used at a time: {0}'.format(
-                ' '.join(['--' + opt for opt in no_arg_opts])
+        print('Error: Only one of the following options may be used at a time: {0}'.format(
+            ' '.join(['--' + opt for opt in no_arg_opts])
             )
         )
         parser.print_help()
         sys.exit(1)
 
     if no_arg_opt_count == 0 and len(args) != 1:
-        print 'Error: Script requires one office argument.\n'
+        print('Error: Script requires one office argument.\n')
         parser.print_help()
         sys.exit(1)
 
@@ -117,15 +115,14 @@ def main():
         try:
             inputs_list += [(office, config.EXTENTS[office])]
         except KeyError:
-            print ('Could not find extents list for office "{0}"').format(office)
+            print('Could not find extents list for office "{0}"'.format(office))
             sys.exit(1)
     elif options.project:
         try:
             extents_list = config.PROJECT_EXTENTS[options.project]
             inputs_list = [('projects', options.project, extents_list)]
         except KeyError:
-            print ('Could not find extents list for '
-                   'project "{0}"').format(options.project)
+            print('Could not find extents list for project "{0}"'.format(options.project))
             sys.exit(1)
     else:
         office = args[0]
@@ -154,8 +151,8 @@ def main():
     except:
         if options.verbose:
             raise
-        print ('Couldn\'t parse time input.  Please use YYYYMMDD format, or '
-               'YYYYMMDD-YYYYMMDD for a date range.')
+        print('Couldn\'t parse time input.  Please use YYYYMMDD format, or '
+              'YYYYMMDD-YYYYMMDD for a date range.')
         sys.exit(1)
 
     verbose_print('Process date(s): {0}'.format(options.process_date))
@@ -172,7 +169,7 @@ def main():
             process_date, get_src_dir_by_date(process_date)
         )
         if unzip_dir is None:
-            print 'Skipping date:', process_date.strftime('%Y.%m.%d')
+            print('Skipping date: {}'.format(process_date.strftime('%Y.%m.%d')))
             continue
 
         for input_list in inputs_list:
@@ -203,31 +200,33 @@ def main():
             shutil.rmtree(unzip_dir)
 
     finish = timeit.default_timer()
-    print 'Finished Processing {0} {1}  (Duration = {2})'.format(
+
+    print('Finished Processing {0} {1}  (Duration = {2})'.format(
         os.path.basename(__file__),
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         str(datetime.timedelta(seconds=finish - start))
+        )
     )
 
     # Transfer any files we've updated during this run.
     if options.run_scp:
         if not transfer_list:
-            print 'No new files to transfer.'
+            print('No new files to transfer.')
         else:
-            print '-' * 64
-            print 'Transferring updated files:'
+            print('-' * 64)
+            print('Transferring updated files:')
         for (office, new_data) in transfer_list:
             target_dir = config.SCP_TARGET_STR.format(office)
             command = 'scp {0} {1}'.format(new_data, target_dir)
-            print command
+            print(command)
             proc = subprocess.Popen(command, shell=True,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
             stdout, stderr = proc.communicate()
             exit_code = proc.wait()
-            print stdout
+            print(stdout)
             if exit_code:
-                print 'ERROR - could not transfer: {0}'.format(new_data)
+                print('ERROR - could not transfer: {0}'.format(new_data))
 
 
 if __name__ == '__main__':

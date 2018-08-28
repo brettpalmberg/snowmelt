@@ -27,7 +27,7 @@ SNODAS_FILENAME_LIST = [
 
 
 def print_dashes(length=64):
-    print '-' * length
+    print('-' * length)
 
 
 def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
@@ -55,7 +55,7 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
 
     # Make sure all files exist before trying any extractions.
     print_dashes()
-    print 'Processing source data for:', process_date.strftime('%Y.%m.%d')
+    print('Processing source data for: {}'.format(process_date.strftime('%Y.%m.%d')))
     msgs = []
     for filename in snodas_src_files:
         _file = os.path.join(src_dir, filename + '.grz')
@@ -63,7 +63,7 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
             msgs += ['Missing source data file: {0}'.format(_file)]
     if msgs:
         for msg in msgs:
-            print msg
+            print(msg)
         print_dashes()
         return None
 
@@ -77,21 +77,21 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
         unzip_file = os.path.join(unzip_dir, filename)
         ready_file = unzip_file + '.bil'
         if not os.path.isfile(ready_file):
-            print 'Processing source to output file:', ready_file
+            print('Processing source to output file: {}'.format(ready_file))
             UnzipLinux(src_file, unzip_file)
             RawFileManip(unzip_file, masterhdr)
         else:
-            print 'Using existing source file:', ready_file
+            print('Using existing source file: {}'.format(ready_file))
 
         # Save a full version of the day's data set.
         shgtif = os.path.join(us_tif_dir, filename + 'alb.tif')
         if save_tiff:
             if not os.path.isfile(shgtif):
-                print 'Saving CONUS SHG tiff file:', shgtif
+                print('Saving CONUS SHG tiff file: {}'.format(shgtif))
                 ReprojUseWarpBil(ready_file, shgtif, nodata=nodata_val,
                                  tr_x='1000', tr_y='-1000')
             else:
-                print 'CONUS SHG tiff already exists:', shgtif
+                print('CONUS SHG tiff already exists: {}'.format(shgtif))
 
     print_dashes()
     return unzip_dir
@@ -111,7 +111,7 @@ def process_extents(office_symbol, process_date,
 
     def verbose_print(to_print):
         if options.verbose:
-            print to_print
+            print(to_print)
 
     def clean_up_tmp_dir(tmp_dir):
         if not options.keep_tmp_dir:
@@ -150,13 +150,10 @@ def process_extents(office_symbol, process_date,
     # Break out if processing for the given date has already happened.
     histfile = os.path.join(histdir, 'proccomplete' + ymdDate + '.txt')
     if os.path.isfile(histfile):
-        print '{0} grids already processed for: {1}'.format(
-            office_symbol, process_date.strftime('%Y.%m.%d')
-        )
+        print('{0} grids already processed for: {1}'.format(office_symbol, process_date.strftime('%Y.%m.%d')))
         return None
-    print 'Processing {0} grids for: {1}'.format(
-        office_symbol, process_date.strftime('%Y.%m.%d')
-    )
+
+    print('Processing {0} grids for: {1}'.format(office_symbol, process_date.strftime('%Y.%m.%d')))
 
     tmpdir = os.path.join(projascdir, 'tmp' + dstr)
     os.mkdir(tmpdir)
@@ -202,7 +199,7 @@ def process_extents(office_symbol, process_date,
             for extentarr in extents_list:
                 ds = gdal.Open(shgtifmath)
                 if ds is None:
-                    print 'Could not open ' + shgtifmath
+                    print('Could not open {}'.format(shgtifmath))
                     return None
                 nodata = ds.GetRasterBand(1).GetNoDataValue()
                 fullext = GetDatasetExtent(ds)
@@ -256,7 +253,7 @@ def process_extents(office_symbol, process_date,
                 cliparr = None
 
     if len(extentGProps) == 0:
-        print "An error occurred identifying extent properties."
+        print("An error occurred identifying extent properties.")
         clean_up_tmp_dir(tmpdir)
         return None
 
@@ -423,7 +420,7 @@ def ReprojUseWarpBil(infile, outfile, ext=None, nodata='-9999',
                         
     run_cmd = ' '.join(cmdlist)
     if not config.SUBPROCESS_QUIET:
-        print run_cmd
+        print(run_cmd)
     proc = subprocess.Popen(run_cmd, shell=True,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -431,7 +428,7 @@ def ReprojUseWarpBil(infile, outfile, ext=None, nodata='-9999',
     exit_code = proc.wait()
 
     if not config.SUBPROCESS_QUIET:
-        print stdout
+        print(stdout)
     if exit_code:
         raise RuntimeError(stderr)
     return outfile
@@ -567,7 +564,7 @@ def SetProps(inDate, basin):
 def UnzipLinux(origfile_noext, file_noext):
     ''' Extract our tarball of data. '''
     if not os.path.exists(origfile_noext + '.grz'):
-        print 'File does not exist: ' + file_noext + '.grz'
+        print('File does not exist: ' + file_noext + '.grz')
         sys.exit()
 
     bname = os.path.basename(file_noext)
@@ -604,15 +601,15 @@ def WriteToDSS(inasc, outdss, dtype, path, dunits='MM'):
         'dtype=' + dtype, 'in=' + bname, 'dss=' + outdss, 'path=' + path
     ]
     if not config.SUBPROCESS_QUIET:
-        print pname
-        print ' '.join(cmdlist)
+        print(pname)
+        print(' '.join(cmdlist))
     proc = subprocess.Popen(
         cmdlist, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
     exit_code = proc.wait()
 
     if not config.SUBPROCESS_QUIET:
-        print stdout
+        print(stdout)
     if exit_code:
         raise RuntimeError(stderr)
     return
