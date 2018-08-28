@@ -2,14 +2,13 @@
 import os
 import sys
 import datetime
-import gzip
 import numpy as np
 import shutil
 import subprocess
 import tarfile
 from collections import namedtuple
 
-from osgeo import gdal, osr
+from osgeo import gdal
 from osgeo.gdalconst import *
 
 from snowmelt.utils import mkdir_p
