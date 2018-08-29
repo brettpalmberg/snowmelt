@@ -9,14 +9,13 @@ import tarfile
 from collections import namedtuple
 
 from osgeo import gdal
-from osgeo.gdalconst import *
 
 from snowmelt.utils import mkdir_p
 from snowmelt import config
 
 # TODO refactor structure to avoid these kinds of imports
 sys.path.append('{}/software/grid2dss'.format(os.getenv('CWMSGRID_HOME')))
-from hecgridloaders import flt2dss2 as flt2dss
+from hecgridloaders import flt2dss
 
 # Global vars.  TODO Bit ugly, need to rethink how to do these.
 Extent = namedtuple('Extent', 'xmin,ymin,xmax,ymax')  # Convert to a class?
@@ -226,7 +225,7 @@ def process_extents(office_symbol, process_date,
                 extentGProps[extentarr[0]] = [dsProj, clipgeot, xsize, ysize, nodata]
 
                 driver = gdal.GetDriverByName("MEM")
-                clipds = driver.Create("", xsize, ysize, 1, GDT_Float32)
+                clipds = driver.Create("", xsize, ysize, 1, gdal.GDT_Float32)
                 clipds.SetGeoTransform(clipgeot)
                 clipds.SetProjection(ds.GetProjection())
                 clipds.GetRasterBand(1).SetNoDataValue(nodata)
@@ -358,7 +357,7 @@ def GetDSSBaseName(inDT):
 
 def GetGridExtent(infile):
     driver = gdal.GetDriverByName("AIG")
-    ds = gdal.Open(infile, GA_ReadOnly)
+    ds = gdal.Open(infile, gdal.GA_ReadOnly)
     if ds is None:
         raise IOError("Could not open '%s'" % (infile))
 
@@ -477,7 +476,7 @@ def RasterMath(shgtif, shgtifmath, varcode, nameDict):
     #   is the case currently because of gdalwarp process.
 
     driver = gdal.GetDriverByName("GTiff")
-    ds = gdal.Open(shgtif, GA_Rea dOnly)
+    ds = gdal.Open(shgtif, gdal.GA_ReadOnly)
     if ds is None:
         return False
 
@@ -495,7 +494,7 @@ def RasterMath(shgtif, shgtifmath, varcode, nameDict):
         sweasc = nameDict["1034"]
 
         # Make sure the SWE dataset has already been written.
-        sweds = gdal.Open(sweasc, GA_ReadOnly)
+        sweds = gdal.Open(sweasc, gdal.GA_ReadOnly)
         if sweds is None:
             return False
 

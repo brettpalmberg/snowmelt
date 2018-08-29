@@ -7,7 +7,6 @@ import re
 import datetime
 import timeit
 import subprocess
-from collections import namedtuple
 
 # Imports from refactoring.
 from optparse import OptionParser
