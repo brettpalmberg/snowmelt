@@ -24,7 +24,7 @@ DATE_REGEX = re.compile(r'^(?P<start_date>\d{8})-(?P<end_date>\d{8})$')
 
 def main():
 
-    def get_src_dir_by_date(proc_date):
+    def get_src_dir_by_date(process_date):
         # Helper function to find the source data, which is stored in
         # a few different places on rsgis-base.
         if options.src_dir:
