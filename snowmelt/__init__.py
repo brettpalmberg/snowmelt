@@ -128,25 +128,16 @@ def process_extents(office_symbol, process_date,
         dataset_type = 'us'
         nodata_val = '55537'
 
-    projdir = os.path.join(config.TOP_DIR, office_symbol)
-
     # Use the proper results dir structure based on the config file.
-    if config.LEGACY_DIRECTORY_STRUCTURE:
-        projresdir = os.path.join(projdir, 'results_sn')
-        projascdir = os.path.join(projresdir, 'asc_files')
-        projdssdir = os.path.join(projresdir, 'dss_files')
-        histdir = os.path.join(projresdir, 'history')
-    else:
-        projascdir = os.path.join(config.ASC_BASE_DIR, office_symbol)
-        projdssdir = os.path.join(config.DSS_BASE_DIR, office_symbol)
-        histdir = os.path.join(config.HISTORY_BASE_DIR, office_symbol)
+    projfltdir = os.path.join(config.FLT_BASE_DIR, office_symbol)
+    projdssdir = os.path.join(config.DSS_BASE_DIR, office_symbol)
+    histdir = os.path.join(config.HISTORY_BASE_DIR, office_symbol)
+    tmpdir = os.path.join(projfltdir, 'tmp{}'.format(datetime.datetime.now().strftime('%y%m%d%H%M%S')))
 
     # Build our results directories if needed.
-    mkdir_p(projascdir)
-    mkdir_p(projdssdir)
-    mkdir_p(histdir)
+    for d in (projfltdir, projdssdir, histdir, tmpdir):
+        mkdir_p(d)
 
-    dstr = datetime.datetime.now().strftime('%y%m%d%H%M%S')
     ymdDate = process_date.strftime('%Y%m%d')
 
     # Break out if processing for the given date has already happened.
@@ -156,9 +147,6 @@ def process_extents(office_symbol, process_date,
         return None
 
     print('Processing {0} grids for: {1}'.format(office_symbol, process_date.strftime('%Y.%m.%d')))
-
-    tmpdir = os.path.join(projascdir, 'tmp' + dstr)
-    os.mkdir(tmpdir)
 
     # Set up a dictionary mapping the various properties to their DSS names.
     PropDict = SetProps(process_date, office_symbol)
@@ -187,7 +175,7 @@ def process_extents(office_symbol, process_date,
 
         easiername = \
             office_symbol + "_" + varprops[0][2].replace(" ", "_").lower() + ymdDate
-        enameDict[varcode] = os.path.join(projascdir, easiername + ".asc")
+        enameDict[varcode] = os.path.join(projfltdir, easiername + ".asc")
         shgtif = os.path.join(tmpdir, f + "alb.tif")
         shgtifmath = os.path.join(tmpdir, easiername + ".tif")
 
@@ -242,11 +230,11 @@ def process_extents(office_symbol, process_date,
                 clipds = None
                 ds = None
 
-                # Copy files from tmpdir to projascdir
+                # Copy files from tmpdir to projfltdir
                 for file_ext in ('bil', 'prj', 'hdr'):
                     filename = '{}.{}'.format(file_basename1,file_ext)
                     shutil.copy(os.path.join(tmpdir, filename),
-                                os.path.join(projascdir, filename)
+                                os.path.join(projfltdir, filename)
                                 )
 
                 varprops = PropDict[varcode]
@@ -256,7 +244,7 @@ def process_extents(office_symbol, process_date,
                     "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
 
                 # Create a flt2dss Task
-                flt2dss_task = flt2dss.Task(infile=os.path.join(projascdir, '{}.{}'.format(file_basename1, 'bil')),
+                flt2dss_task = flt2dss.Task(infile=os.path.join(projfltdir, '{}.{}'.format(file_basename1, 'bil')),
                                             dss_file=dssfile,
                                             data_type=varprops[1],
                                             pathname=path,
@@ -287,14 +275,14 @@ def process_extents(office_symbol, process_date,
 
             WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
 
-            # Copy f iles from tmpdir to projascdir
+            # Copy f iles from tmpdir to projfltdir
             for file_ext in ('bil', 'prj'):
                 shutil.copy(os.path.join(tmpdir, '{}.{}'.format(file_basename2, file_ext)),
-                            os.path.join(projascdir, '{}.{}'.format(file_basename2, file_ext))
+                            os.path.join(projfltdir, '{}.{}'.format(file_basename2, file_ext))
                             )
 
             # Create a flt2dss Task
-            flt2dss_task = flt2dss.Task(infile=os.path.join(projascdir, '{}.{}'.format(file_basename2, 'bil')),
+            flt2dss_task = flt2dss.Task(infile=os.path.join(projfltdir, '{}.{}'.format(file_basename2, 'bil')),
                                         dss_file=dssfile,
                                         data_type=dtype,
                                         pathname=path,
@@ -312,7 +300,6 @@ def process_extents(office_symbol, process_date,
 
     # Write out file to track that we've run for this day.
     with open(histfile, "w") as fo:
-        dstr = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         fo.write(process_date.strftime("%a %b %d %H:%M:%S %Y"))
         fo.close
     return dssfile

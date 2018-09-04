@@ -1,7 +1,5 @@
 # Base configuration file that contains watershed extents by division/district.
 
-TOP_DIR = '/fire/study/snow/nohrsc_gdal'
-
 # This is where we look for source files to process.
 SRC_DIR = '/fire/study/snow/rawdata'
 ARCHIVE_DIR = '/fire/study/snow/archive/misc/SNODAS'
@@ -18,11 +16,7 @@ HEADER_KEY_DIR = '/fire/study/snow/nohrsc_gdal/key'
 # These three locations are the base directories for our output files.
 DSS_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
 HISTORY_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
-ASC_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
-
-# If this is set to True, the three base dirs above will be ignored and
-# all results will be tossed into TOP_DIR/division/district/results_sn/.../
-LEGACY_DIRECTORY_STRUCTURE = False
+FLT_BASE_DIR = '/fire/study/snow/nohrsc_gdal'
 
 # Scratch (Intermediate) File Format Driver
 # (Recommended) flt   : SCRATCH_FILE_DRIVER = 'EHdr'
