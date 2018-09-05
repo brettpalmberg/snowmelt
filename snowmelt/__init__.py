@@ -138,10 +138,8 @@ def process_extents(office_symbol, process_date,
     for d in (projfltdir, projdssdir, histdir, tmpdir):
         mkdir_p(d)
 
-    ymdDate = process_date.strftime('%Y%m%d')
-
     # Break out if processing for the given date has already happened.
-    histfile = os.path.join(histdir, 'proccomplete' + ymdDate + '.txt')
+    histfile = os.path.join(histdir, 'proccomplete{}.txt'.format(process_date.strftime('%Y%m%d')))
     if os.path.isfile(histfile):
         print('{0} grids already processed for: {1}'.format(office_symbol, process_date.strftime('%Y.%m.%d')))
         return None
@@ -150,45 +148,45 @@ def process_extents(office_symbol, process_date,
 
     # Set up a dictionary mapping the various properties to their DSS names.
     PropDict = SetProps(process_date, office_symbol)
-    enameDict = {}
-    zerolist = ["0001", "0002", "0003"]
+    scratchfile_dict = {}
     extentGProps = {}
     maxExtent = getMaxExtent(extents_list)
-    dssbasename = GetDSSBaseName(process_date)
-    dssfile = os.path.join(projdssdir, dssbasename)
-
-    # Define our files and make sure they all exist.
-    snodaslist = [
-        s.format(ds=dataset_type, ymd=ymdDate) for s in SNODAS_FILENAME_LIST
-    ]
+    dssfile = os.path.join(projdssdir, '{}'.format(GetDSSBaseName(process_date)))
 
     # Instantiate new flt2dss.Operation
     flt2dss_operation = flt2dss.Operation()
 
     # Loop through our source SNODAS files.
-    for f in snodaslist:
+    for f in [s.format(ds=dataset_type, ymd=process_date.strftime('%Y%m%d')) for s in SNODAS_FILENAME_LIST]:
 
+        # Strip variable key/ID from filename
         varcode = f[8:12]
         varprops = PropDict[varcode]
-        path = "/" + "/".join(varprops[0]) + "/"
-        dtype = varprops[1]
 
-        easiername = \
-            office_symbol + "_" + varprops[0][2].replace(" ", "_").lower() + ymdDate
-        enameDict[varcode] = os.path.join(projfltdir, easiername + ".asc")
-        shgtif = os.path.join(tmpdir, f + "alb.tif")
-        shgtifmath = os.path.join(tmpdir, easiername + ".tif")
+        # Filenames
+        src_file = os.path.join(src_dir, '{}.bil'.format(f))
+        shgtif = os.path.join(tmpdir, '{}alb.tif'.format(f))
+        shgtifmath = os.path.join(tmpdir, '{}.tif'.format(f))
 
-        src_file = os.path.join(src_dir, f + '.bil')
+        # Reproject src_file to shgtif
         ReprojUseWarpBil(src_file, shgtif, maxExtent, nodata_val)
+
+        # Set dictionary entry for variable to filepath to SHG projected TIF
+        scratchfile_dict[varcode] = shgtif
+        
+        # if variable does not require computation to define grid values, set
+        # "shgtifmath" (grid after computation) to shgtif (raw grid)
+        # else run RasterMath() to write a grid with computed values
         mathranokay = True
-        if varprops[2]:
-            # NOTE: enamedict populated only for prior product numbers
-            mathranokay = RasterMath(shgtif, shgtifmath, varcode, enameDict)
-        else:
+        # If math is not required to derive final grid
+        if varprops[2] is False:
             shgtifmath = shgtif
+        else:
+            # NOTE: scratchfile_dict populated only for prior product numbers
+            mathranokay = RasterMath(shgtif, shgtifmath, varcode, scratchfile_dict)
+
         if mathranokay:
-            enameDict[varcode] = shgtifmath
+            scratchfile_dict[varcode] = shgtifmath
             for extentarr in extents_list:
                 ds = gdal.Open(shgtifmath)
                 if ds is None:
@@ -198,7 +196,7 @@ def process_extents(office_symbol, process_date,
                 fullext = GetDatasetExtent(ds)
                 cellsize = ds.GetGeoTransform()[1]
 
-                subext = extentarr[1]
+                extent_name, subext = extentarr[0], extentarr[1]
                 fullof, subof = min_box_os(fullext, subext, cellsize)
                 xsize = int(fullof[2])
                 ysize = int(fullof[3])
@@ -210,7 +208,7 @@ def process_extents(office_symbol, process_date,
                 )
 
                 clipgeot = [subext[0], cellsize, 0, subext[3], 0, -cellsize]
-                extentGProps[extentarr[0]] = [dsProj, clipgeot, xsize, ysize, nodata]
+                extentGProps[extent_name] = [dsProj, clipgeot, xsize, ysize, nodata]
 
                 driver = gdal.GetDriverByName("MEM")
                 clipds = driver.Create("", xsize, ysize, 1, gdal.GDT_Float32)
@@ -220,37 +218,26 @@ def process_extents(office_symbol, process_date,
                 clipds.GetRasterBand(1).WriteArray(cliparr, 0, 0)
                 clipds.FlushCache()
                 
-                file_basename1 = '{}_{}{}'.format(extentarr[0].replace(" ", "_"),
+                file_basename1 = '{}_{}{}'.format(extent_name.replace(" ", "_"),
                                                   varprops[0][2].replace(" ", "_").lower(),
-                                                  ymdDate
+                                                  process_date.strftime('%Y.%m.%d')
                                                   )
-                
-                WriteGrid(clipds, file_basename1, tmpdir, config.SCRATCH_FILE_DRIVER)
+
+                # Write grid to "file_basename1" in the projfltdir
+                WriteGrid(clipds, file_basename1, projfltdir, config.SCRATCH_FILE_DRIVER)
                 cliparr = None
                 clipds = None
                 ds = None
 
-                # Copy files from tmpdir to projfltdir
-                for file_ext in ('bil', 'prj', 'hdr'):
-                    filename = '{}.{}'.format(file_basename1,file_ext)
-                    shutil.copy(os.path.join(tmpdir, filename),
-                                os.path.join(projfltdir, filename)
-                                )
-
-                varprops = PropDict[varcode]
-                p = varprops[0]
-
-                path = "/SHG/" + extentarr[0].upper() + "/" + p[2] + \
-                    "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
-
                 # Create a flt2dss Task
-                flt2dss_task = flt2dss.Task(infile=os.path.join(projfltdir, '{}.{}'.format(file_basename1, 'bil')),
-                                            dss_file=dssfile,
-                                            data_type=varprops[1],
-                                            pathname=path,
-                                            grid_type='SHG',
-                                            data_unit='MM'
-                                            )
+                flt2dss_task = flt2dss.Task(
+                    infile=os.path.join(projfltdir, '{}.{}'.format(file_basename1, 'bil')),
+                    dss_file=dssfile,
+                    data_type=varprops[1],
+                    pathname='/SHG/{}/{}/{}/{}/{}/'.format(extentarr[0].upper(), varprops[0][2], varprops[0][3], varprops[0][4], varprops[0][5]),
+                    grid_type='SHG',
+                    data_unit=varprops[3]
+                    )
 
                 # Add flt2dss Task to Operation
                 flt2dss_operation.add_task(flt2dss_task)
@@ -260,35 +247,28 @@ def process_extents(office_symbol, process_date,
         clean_up_tmp_dir(tmpdir)
         return None
 
-    for varcode in zerolist:
-        varprops = PropDict[varcode]
+    # Write Zero Grids for LIQUID WATER, COLD CONTENT ATI, MELTRATE ATI
+    for varcode in ["0001", "0002", "0003"]:
+        varprops = PropDict[varcode]       
         for extentarr in extents_list:
-            p = varprops[0]
-            dtype = varprops[1]
-            path = "/SHG/" + extentarr[0].upper() + "/" + p[2] + \
-                "/" + p[3] + "/" + p[4] + "/" + p[5] + "/"
-            
+
             file_basename2 = '{}_{}{}'.format(extentarr[0].replace(" ", "_"),
                                               varprops[0][2].replace(" ", "_").lower(),
-                                              ymdDate
+                                              process_date.strftime('%Y%m%d')
                                               )
 
-            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
-
-            # Copy f iles from tmpdir to projfltdir
-            for file_ext in ('bil', 'prj'):
-                shutil.copy(os.path.join(tmpdir, '{}.{}'.format(file_basename2, file_ext)),
-                            os.path.join(projfltdir, '{}.{}'.format(file_basename2, file_ext))
-                            )
+            # Write grid to "file_basename1" in the projfltdir
+            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, projfltdir, config.SCRATCH_FILE_DRIVER)
 
             # Create a flt2dss Task
-            flt2dss_task = flt2dss.Task(infile=os.path.join(projfltdir, '{}.{}'.format(file_basename2, 'bil')),
-                                        dss_file=dssfile,
-                                        data_type=dtype,
-                                        pathname=path,
-                                        grid_type='SHG',
-                                        data_unit=varprops[3]
-                                        )
+            flt2dss_task = flt2dss.Task(
+                infile=os.path.join(projfltdir, '{}.{}'.format(file_basename2, 'bil')),
+                dss_file=dssfile,
+                data_type=varprops[1],
+                pathname='/SHG/{}/{}/{}/{}/{}/'.format(extentarr[0].upper(), varprops[0][2], varprops[0][3], varprops[0][4], varprops[0][5]),
+                grid_type='SHG',
+                data_unit=varprops[3]
+                )
 
             # Add flt2dss Task to Operation
             flt2dss_operation.add_task(flt2dss_task)
@@ -524,36 +504,20 @@ def SetProps(inDate, basin):
     # dict[0] = Pathname Part list
     # dict[1] = Data type
     # dict[2] = Run var thru RasterMath sub
+    # dict[3] = Data Units
 
-    DSSdate = inDate.strftime("%d%b%Y").upper() + ":0600"
-    DSSdateYest = (inDate - datetime.timedelta(1)).strftime("%d%b%Y").upper() \
-        + ":0600"
+    DSSdate = '{}:0600'.format(inDate.strftime("%d%b%Y").upper())
+    DSSdateYest = '{}:0600'.format((inDate - datetime.timedelta(1)).strftime("%d%b%Y").upper())
     bup = basin.upper()
-    inDict = {}
 
-    # SWE
-    inDict["1034"] = [["SHG", bup, "SWE", DSSdate, "", "SNODAS"],
-                      "INST-VAL", False]
-    # Snow Depth
-    inDict["1036"] = [["SHG", bup, "SNOW DEPTH", DSSdate, "", "SNODAS"],
-                      "INST-VAL", False]
-    # Cold Content
-    inDict["1038"] = [["SHG", bup, "COLD CONTENT", DSSdate, "", "SNODAS"],
-                      "INST-VAL", True]
-    # Snow Melt
-    inDict["1044"] = [["SHG", bup, "SNOW MELT", DSSdateYest, DSSdate,
-                       "SNODAS"], "PER-CUM", True]
-    # Liquid Water (Zero)
-    inDict["0001"] = [["SHG", bup, "LIQUID WATER", DSSdate, "", "ZERO"],
-                      "INST-VAL", False, "MM"]
-    # Cold Content ATI (Zero)
-    inDict["0002"] = [["SHG", bup, "COLD CONTENT ATI", DSSdate, "", "ZERO"],
-                      "INST-VAL", False, "DEG C"]
-    # Melt Rate ATI (Zero)
-    inDict["0003"] = [["SHG", bup, "MELTRATE ATI", DSSdate, "", "ZERO"],
-                      "INST-VAL", False, "DEGC-D"]
-    return inDict
-
+    return { '1034': [["SHG", bup, "SWE", DSSdate, "", "SNODAS"], "INST-VAL", False, 'MM'],
+             '1036': [["SHG", bup, "SNOW DEPTH", DSSdate, "", "SNODAS"], "INST-VAL", False, 'MM'],
+             '1038': [["SHG", bup, "COLD CONTENT", DSSdate, "", "SNODAS"], "INST-VAL", True, 'MM'],
+             '1044': [["SHG", bup, "SNOW MELT", DSSdateYest, DSSdate, "SNODAS"], "PER-CUM", True, 'MM'],
+             '0001': [["SHG", bup, "LIQUID WATER", DSSdate, "", "ZERO"], "INST-VAL", False, "MM"],
+             '0002': [["SHG", bup, "COLD CONTENT ATI", DSSdate, "", "ZERO"], "INST-VAL", False, "DEG C"],
+             '0003': [["SHG", bup, "MELTRATE ATI", DSSdate, "", "ZERO"], "INST-VAL", False, "DEGC-D"]
+             }
 
 def UnzipLinux(origfile_noext, file_noext):
     ''' Extract our tarball of data. '''
