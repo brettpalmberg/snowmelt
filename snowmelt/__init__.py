@@ -223,15 +223,15 @@ def process_extents(office_symbol, process_date,
                                                   process_date.strftime('%Y.%m.%d')
                                                   )
 
-                # Write grid to "file_basename1" in the projfltdir
-                WriteGrid(clipds, file_basename1, projfltdir, config.SCRATCH_FILE_DRIVER)
+                # Write grid to "file_basename1" in the tmpdir
+                WriteGrid(clipds, file_basename1, tmpdir, config.SCRATCH_FILE_DRIVER)
                 cliparr = None
                 clipds = None
                 ds = None
 
                 # Create a flt2dss Task
                 flt2dss_task = flt2dss.Task(
-                    infile=os.path.join(projfltdir, '{}.{}'.format(file_basename1, 'bil')),
+                    infile=os.path.join(tmpdir, '{}.{}'.format(file_basename1, 'bil')),
                     dss_file=dssfile,
                     data_type=varprops[1],
                     pathname='/SHG/{}/{}/{}/{}/{}/'.format(extentarr[0].upper(), varprops[0][2], varprops[0][3], varprops[0][4], varprops[0][5]),
@@ -257,12 +257,12 @@ def process_extents(office_symbol, process_date,
                                               process_date.strftime('%Y%m%d')
                                               )
 
-            # Write grid to "file_basename1" in the projfltdir
-            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, projfltdir, config.SCRATCH_FILE_DRIVER)
+            # Write grid to "file_basename1" in the tmpdir
+            WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
 
             # Create a flt2dss Task
             flt2dss_task = flt2dss.Task(
-                infile=os.path.join(projfltdir, '{}.{}'.format(file_basename2, 'bil')),
+                infile=os.path.join(tmpdir, '{}.{}'.format(file_basename2, 'bil')),
                 dss_file=dssfile,
                 data_type=varprops[1],
                 pathname='/SHG/{}/{}/{}/{}/{}/'.format(extentarr[0].upper(), varprops[0][2], varprops[0][3], varprops[0][4], varprops[0][5]),
