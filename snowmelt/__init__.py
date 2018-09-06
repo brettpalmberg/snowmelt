@@ -411,9 +411,9 @@ def RawFileManip(file_noext, masterhdr):
 
 def ReprojUseWarpBil(infile, outfile, ext=None, nodata='-9999',
                      tr_x='2000', tr_y='-2000'):
-    to_srs = ("'+proj=aea +lat_1=29.5n +lat_2=45.5n +lat_0=23.0n "
-              "+lon_0=96.0w +x_0=0.0 +y_0=0.0 +units=m +datum=WGS84'")
-    from_srs = '"+proj=longlat +datum=WGS84"'
+    # From Spatial Reference WGS 84 to NAD83 Conus Albers
+    to_srs = '"EPSG:5070"'
+    from_srs = '"EPSG:4326"'
 
     cmdlist = ["gdalwarp", "-s_srs", from_srs, "-t_srs", to_srs,
                 "-r", "bilinear",
