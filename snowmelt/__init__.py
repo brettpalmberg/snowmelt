@@ -80,8 +80,12 @@ def prepare_source_data_for_date(process_date, src_dir, save_tiff=True):
         ready_file = unzip_file + '.bil'
         if not os.path.isfile(ready_file):
             print('Processing source to output file: {}'.format(ready_file))
-            UnzipLinux(src_file, unzip_file)
-            RawFileManip(unzip_file, masterhdr)
+            try:
+                UnzipLinux(src_file, unzip_file)
+                RawFileManip(unzip_file, masterhdr)
+            except:
+                print('ERROR: Failure in UnzipLinux or RawFileManip')
+                return None
         else:
             print('Using existing source file: {}'.format(ready_file))
 
