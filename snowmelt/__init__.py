@@ -261,7 +261,7 @@ def process_extents(office_symbol, process_date,
                                               process_date.strftime('%Y%m%d')
                                               )
 
-            # Write grid to "file_basename1" in the tmpdir
+            # Write grid to "file_basename2" in the tmpdir
             WriteZeroGrid(extentGProps[extentarr[0]], file_basename2, tmpdir, config.SCRATCH_FILE_DRIVER)
 
             # Create a flt2dss Task
@@ -273,10 +273,10 @@ def process_extents(office_symbol, process_date,
                 grid_type='SHG',
                 data_unit=varprops[3]
                 )
-
+            
             # Add flt2dss Task to Operation
             flt2dss_operation.add_task(flt2dss_task)
-    
+
     # Write grids to DSS
     flt2dss_operation.execute()
 
@@ -556,11 +556,11 @@ def WriteZeroGrid(gProps, gridname, tmpdir, driver_name):
     ysize = gProps[3]
 
     memdrv = gdal.GetDriverByName("MEM")
-    memds = memdrv.Create("", xsize, ysize, 1, gdal.GDT_Byte)
+    memds = memdrv.Create("", xsize, ysize, 1, gdal.GDT_Float32)
     memds.SetProjection(gProps[0])
     memds.SetGeoTransform(gProps[1])
     memds.GetRasterBand(1).SetNoDataValue(-9999)
-    ndarr = np.zeros([ysize, xsize], np.dtype('byte'))
+    ndarr = np.zeros([ysize, xsize], np.dtype('float32'))
     memds.GetRasterBand(1).WriteArray(ndarr, 0, 0)
     memds.FlushCache()
 
